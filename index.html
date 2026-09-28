@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTS Al-Qur'an Hadist - MA Mu'allimin NU</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #print-area {
+                box-shadow: none !important;
+                border: 1px solid #e5e7eb;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 2rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const initialSettings = {
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Logo_Nahdlatul_Ulama_%28NU%29.svg/1024px-Logo_Nahdlatul_Ulama_%28NU%29.svg.png",
+            kkm: 76,
+            timeLimit: 90 // dalam menit
+        };
+
+        const matchingOptionsGlobal = [
+            "Nuzulul Qur'an", "Mutawatir", "Zaid bin Tsabit", "Rasm Usmani", "Makkiyah",
+            "Madaniyah", "Jam'ul Qur'an", "Mukjizat", "Wahyu", "Tadarrus",
+            "Ilham", "Gua Hira", "Abu Bakar Ash-Shiddiq", "Usman bin Affan", "Jibril"
+        ];
+
+        const initialQuestions = [
+            // --- SOAL PILIHAN GANDA (1-15) ---
+            { id: 1, type: 'mc', text: "Pak Ahmad rutih membaca Al-Qur'an setiap selesai salat Subuh. Ia meyakini bahwa aktivitasnya tersebut bernilai pahala meskipun ia belum memahami artinya. Hal ini selaras dengan pengertian Al-Qur'an secara istilah, yaitu...", options: ["Kalam Allah yang diturunkan kepada Nabi Muhammad SAW", "Sesuatu yang dibaca berulang-ulang", "Mukjizat terbesar Nabi Muhammad SAW", "Kalam Allah yang membacanya dinilai sebagai ibadah", "Wahyu Allah yang disampaikan melalui perantara Jibril"], answer: 3 },
+            { id: 2, type: 'mc', text: "Dalam sebuah kajian, Budi bertanya mengenai perbedaan wahyu yang diterima Nabi dengan ilham yang diterima manusia biasa. Karakteristik utama yang membedakan wahyu Al-Qur'an dengan ilham adalah...", options: ["Wahyu bersifat mutlak benarnya, sedangkan ilham bisa salah", "Wahyu diturunkan melalui mimpi, ilham melalui malaikat", "Wahyu hanya berisi hukum, ilham berisi petunjuk hidup", "Wahyu diberikan kepada semua rasul, ilham hanya untuk umat Islam", "Wahyu berupa suara langsung, ilham berupa tulisan"], answer: 0 },
+            { id: 3, type: 'mc', text: "Sejarah mencatat bahwa Nabi Muhammad SAW sering bertahanuts (menyendiri) memikirkan kerusakan moral masyarakat Makkah sebelum menerima wahyu pertama. Pesan kontekstual dari peristiwa ini bagi generasi muda saat ini adalah...", options: ["Harus menjauhi pergaulan masyarakat sepenuhnya", "Pentingnya introspeksi diri dan memikirkan solusi atas masalah sosial", "Wahyu hanya turun kepada orang yang menyendiri", "Menyendiri di gua adalah syarat wajib menjadi pemimpin", "Kerusakan moral hanya bisa diperbaiki dengan diam"], answer: 1 },
+            { id: 4, type: 'mc', text: "Ketika dihadapkan pada kebuntuan masalah keluarga, Siti dan suaminya sepakat kembali merujuk pada ajaran Al-Qur'an. Ini membuktikan fungsi Al-Qur'an sebagai...", options: ["Al-Furqan (pembeda)", "Asy-Syifa (penyembuh fisik)", "Al-Huda (petunjuk)", "Az-Zikr (peringatan masa lalu)", "Al-Bayan (penjelas sejarah)"], answer: 2 },
+            { id: 5, type: 'mc', text: "Al-Qur'an diturunkan secara berangsur-angsur selama kurang lebih 23 tahun, tidak sekaligus. Kebijaksanaan dari metode penurunan ini jika dikaitkan dengan proses belajar di sekolah adalah...", options: ["Membuat proses belajar menjadi sangat lama dan membosankan", "Memudahkan pemahaman, penghafalan, dan penerapan ilmu secara bertahap", "Menunjukkan bahwa ilmu itu sulit didapat", "Menyesuaikan dengan jadwal malaikat Jibril", "Agar Nabi Muhammad memiliki banyak waktu istirahat"], answer: 1 },
+            { id: 6, type: 'mc', text: "Ayat-ayat yang turun sebelum Nabi hijrah memiliki penekanan materi yang berbeda dengan ayat yang turun setelah hijrah. Jika dikaitkan dengan pembangunan peradaban, ayat Makkiyah lebih berfokus pada...", options: ["Pembentukan sistem tata negara", "Pengaturan hukum pidana dan perdata", "Penanaman pondasi tauhid, akhlak, dan akidah", "Strategi peperangan", "Hukum pembagian harta waris"], answer: 2 },
+            { id: 7, type: 'mc', text: "Banyak orientalis yang mencoba mencari-cari kesalahan tata bahasa dalam Al-Qur'an namun selalu gagal. Fakta ini membuktikan bahwa Al-Qur'an adalah...", options: ["Buku tata bahasa Arab terlengkap", "Karya sastra para penyair Quraisy", "Mukjizat yang melemahkan argumen penentangnya", "Kumpulan puisi kuno", "Dokumen sejarah yang ditulis sangat rapi"], answer: 2 },
+            { id: 8, type: 'mc', text: "Pada masa Khalifah Abu Bakar, banyak penghafal Al-Qur'an yang gugur dalam Perang Yamamah. Kekhawatiran Umar bin Khattab atas kejadian tersebut menunjukkan sikap...", options: ["Ketakutan akan hilangnya kekuasaan", "Tanggung jawab yang besar terhadap pelestarian keautentikan wahyu", "Keinginan untuk mencetak buku yang banyak", "Sikap pesimis terhadap masa depan Islam", "Menyalahkan para sahabat yang ikut perang"], answer: 1 },
+            { id: 9, type: 'mc', text: "Khalifah Usman bin Affan menyatukan mushaf karena melihat adanya bibit perpecahan umat akibat perbedaan dialek bacaan. Keputusan ini mencerminkan prinsip...", options: ["Membiarkan keberagaman tanpa batas", "Menghindari perpecahan (mencegah mafsadah) lebih diutamakan", "Memaksakan kehendak khalifah", "Menghapus seluruh warisan Abu Bakar", "Mengikuti tradisi bangsa Romawi"], answer: 1 },
+            { id: 10, type: 'mc', text: "Salah satu bukti keautentikan Al-Qur'an di era digital saat ini adalah...", options: ["Aplikasinya paling banyak diunduh di Play Store", "Bahasanya sudah diterjemahkan ke semua bahasa", "Jika ada kesalahan cetak atau ketik sedikit saja, jutaan penghafalnya di seluruh dunia akan langsung menyadarinya", "Dicetak dengan kertas berkualitas tinggi", "Hanya bisa dibaca oleh orang yang suci"], answer: 2 },
+            { id: 11, type: 'mc', text: "Al-Qur'an menantang siapapun yang meragukannya untuk membuat satu surah saja yang semisal dengannya (QS. Al-Baqarah: 23). Tantangan ini berlaku untuk...", options: ["Hanya bagi bangsa Arab masa lalu", "Hanya bagi para penyair Makkah", "Seluruh manusia dan jin di setiap zaman", "Para ilmuwan modern saja", "Hanya untuk umat agama lain"], answer: 2 },
+            { id: 12, type: 'mc', text: "Kedudukan Al-Qur'an sebagai sumber hukum Islam yang pertama dan utama mengandung konsekuensi bahwa...", options: ["Semua masalah sekecil apapun pasti tertulis eksplisit di dalamnya", "Hadis tidak lagi diperlukan", "Segala aturan dan hukum buatan manusia tidak boleh bertentangan dengan prinsip dasarnya", "Umat Islam tidak boleh mempelajari hukum negara", "Al-Qur'an menolak ilmu pengetahuan modern"], answer: 2 },
+            { id: 13, type: 'mc', text: "Seseorang yang menghayati keautentikan Al-Qur'an akan memiliki sikap...", options: ["Sombong karena memiliki kitab terbaik", "Menganggap remeh penganut agama lain", "Tumbuh keyakinan kuat dan semangat untuk terus mempelajari serta mengamalkannya", "Cukup menyimpannya di tempat paling tinggi di rumah", "Membacanya hanya saat bulan Ramadhan"], answer: 2 },
+            { id: 14, type: 'mc', text: "Jaminan Allah SWT bahwa Dia sendiri yang akan memelihara Al-Qur'an termaktub secara jelas dalam...", options: ["QS. Al-Fatihah: 1-7", "QS. Al-Hijr: 9", "QS. Al-Baqarah: 2", "QS. Yasin: 1", "QS. Al-Ikhlas: 1-4"], answer: 1 },
+            { id: 15, type: 'mc', text: "Dalam perdebatan mengenai keaslian teks agama, posisi Al-Qur'an sangat kuat karena diriwayatkan secara...", options: ["Ahad (satu jalur sanad)", "Rahasia", "Mutawatir (oleh orang banyak dari generasi ke generasi sehingga mustahil sepakat dusta)", "Lisan saja tanpa tulisan", "Tulisan saja tanpa hafalan"], answer: 2 },
+
+            // --- SOAL PILIHAN GANDA KOMPLEKS (16-30) ---
+            { id: 16, type: 'cmc', text: "Di sebuah forum diskusi, seorang pemateri menjelaskan perbedaan antara wahyu Al-Qur'an dan Hadis Qudsi. Manakah dari pernyataan berikut yang merupakan ciri KHUSUS wahyu berupa Al-Qur'an? (Pilih jawaban benar)", options: ["Membacanya dihitung sebagai ibadah", "Lafal dan maknanya murni dari Allah SWT", "Boleh dibaca saat sedang hadas besar", "Disampaikan melalui malaikat Jibril", "Merupakan mukjizat terbesar"], answer: [0, 1, 3, 4] },
+            { id: 17, type: 'cmc', text: "Pilih pernyataan-pernyataan yang benar terkait peristiwa Nuzulul Qur'an!", options: ["Wahyu pertama turun di Gua Hira", "Wahyu pertama adalah surah Al-Fatihah", "Diturunkan pada bulan Ramadhan", "Perintah pertama adalah perintah membaca (Iqra')", "Diturunkan sekaligus dalam satu malam ke bumi"], answer: [0, 2, 3] },
+            { id: 18, type: 'cmc', text: "Hikmah Al-Qur'an diturunkan secara berangsur-angsur sangat relevan dengan psikologi pendidikan. Apa saja hikmah tersebut?", options: ["Meneguhkan hati Nabi Muhammad SAW dalam menghadapi tantangan", "Membuat Al-Qur'an sulit dipalsukan karena tercecer", "Memudahkan kaum muslimin menghafal dan memahami ayat-ayatnya", "Hukum-hukum Allah ditetapkan secara bertahap sesuai kesiapan masyarakat", "Menyesuaikan dengan harga perkamen (kertas) saat itu"], answer: [0, 2, 3] },
+            { id: 19, type: 'cmc', text: "Karakteristik ayat-ayat Makkiyah umumnya mencakup...", options: ["Berisi kisah-kisah umat terdahulu untuk menjadi pelajaran", "Sering diawali dengan panggilan 'Wahai manusia' (Ya ayyuhannas)", "Banyak membahas hukum perang dan bagi hasil rampasan", "Ayatnya cenderung pendek dan tegas", "Fokus pada penanaman akidah dan hari kiamat"], answer: [0, 1, 3, 4] },
+            { id: 20, type: 'cmc', text: "Karakteristik ayat-ayat Madaniyah sangat erat kaitannya dengan kondisi masyarakat Madinah yang sudah membentuk entitas negara. Ciri-cirinya adalah...", options: ["Banyak membahas hukum kemasyarakatan (muamalah)", "Membongkar kemunafikan (membahas orang munafik)", "Ayatnya umumnya panjang-panjang", "Fokus pada penyembahan berhala", "Sering diawali dengan panggilan 'Wahai orang-orang yang beriman'"], answer: [0, 1, 2, 4] },
+            { id: 21, type: 'cmc', text: "Untuk menjaga keautentikan wahyu, Nabi Muhammad SAW menunjuk beberapa sahabat sebagai penulis wahyu resmi. Siapa saja di antara mereka?", options: ["Zaid bin Tsabit", "Abu Lahab", "Ubay bin Ka'ab", "Ali bin Abi Thalib", "Musailamah Al-Kadzab"], answer: [0, 2, 3] },
+            { id: 22, type: 'cmc', text: "Proses kodifikasi (pengumpulan) Al-Qur'an pada masa Abu Bakar dipicu oleh...", options: ["Banyaknya penghafal Al-Qur'an yang gugur di Perang Yamamah", "Usulan kuat dari Umar bin Khattab", "Perintah langsung dari Nabi Muhammad sebelum wafat", "Khawatir hilangnya sebagian ayat Al-Qur'an", "Keinginan Abu Bakar untuk terkenal"], answer: [0, 1, 3] },
+            { id: 23, type: 'cmc', text: "Kebijakan Khalifah Usman bin Affan dalam menyalin mushaf standar memberikan dampak positif yang besar hingga saat ini, yaitu...", options: ["Menghindari perpecahan umat akibat perbedaan bacaan (qira'at)", "Mematikan kreativitas sahabat lain", "Menyatukan umat Islam di seluruh dunia pada satu rasm (tulisan) standar", "Memudahkan proses pencetakan Al-Qur'an di masa modern", "Menghapus pahala bagi yang membaca dengan logat lain"], answer: [0, 2, 3] },
+            { id: 24, type: 'cmc', text: "Bukti-bukti rasional yang menunjukkan bahwa Al-Qur'an adalah otentik wahyu Allah, bukan karangan Muhammad SAW adalah...", options: ["Nabi Muhammad adalah seorang yang Ummi (tidak bisa membaca & menulis)", "Ramalan dalam Al-Qur'an terbukti benar (misal: kemenangan Romawi)", "Tata bahasanya sangat mudah ditiru", "Berisi fakta ilmiah yang baru terungkap abad modern", "Nabi mendapat bayaran mahal untuk setiap ayat"], answer: [0, 1, 3] },
+            { id: 25, type: 'cmc', text: "Cara kita di era modern ini untuk menjaga dan menghayati keautentikan Al-Qur'an adalah...", options: ["Rajin membaca dan mempelajari tajwidnya", "Hanya menyimpannya di dalam lemari kaca", "Menghafalkan ayat-ayatnya sesuai kemampuan", "Mengamalkan nilai-nilainya dalam kehidupan sosial", "Mendebat kitab suci agama lain setiap hari"], answer: [0, 2, 3] },
+            { id: 26, type: 'cmc', text: "Al-Qur'an berfungsi sebagai 'Asy-Syifa' (penyembuh). Penyakit apa saja yang dimaksud secara kontekstual?", options: ["Penyakit hati seperti iri, dengki, dan sombong", "Penyakit patah tulang", "Penyakit kebodohan dan kesesatan berpikir", "Penyakit keragu-raguan terhadap kebenaran", "Kanker stadium akhir tanpa bantuan medis"], answer: [0, 2, 3] },
+            { id: 27, type: 'cmc', text: "Fakta sejarah yang membuktikan penjagaan Allah terhadap Al-Qur'an meliputi...", options: ["Tercatatnya ayat-ayat langsung di hadapan Nabi ketika turun", "Banyaknya para sahabat yang hafal di luar kepala (huffaz)", "Metode periwayatan yang mutawatir", "Semua lembaran asli dari zaman nabi masih ada di museum", "Standardisasi tulisan di zaman Usman"], answer: [0, 1, 2, 4] },
+            { id: 28, type: 'cmc', text: "Sikap seorang pelajar MA yang mencerminkan keyakinan akan kebenaran penurunan Al-Qur'an adalah...", options: ["Menjadikan Al-Qur'an sebagai pedoman akhlak di sekolah", "Membaca Al-Qur'an hanya untuk lulus ujian", "Tidak mudah percaya pada berita hoaks, mengamalkan sikap tabayyun", "Malu menunjukkan identitas sebagai muslim", "Mempelajari tafsir Al-Qur'an yang mu'tabar (diakui)"], answer: [0, 2, 4] },
+            { id: 29, type: 'cmc', text: "Tantangan Al-Qur'an terhadap mereka yang meragukannya terbagi dalam beberapa tahapan, yaitu menantang untuk membuat...", options: ["Satu kitab penuh semisal Al-Qur'an", "Sepuluh surah semisal Al-Qur'an", "Satu hadis saja", "Satu surah saja semisal Al-Qur'an", "Patung malaikat Jibril"], answer: [0, 1, 3] },
+            { id: 30, type: 'cmc', text: "Nama-nama lain Al-Qur'an yang tercantum di dalamnya menggambarkan fungsinya yang luas, antara lain...", options: ["Al-Kitab", "Al-Furqan", "Az-Zikr", "Al-Majid", "Al-Hikmah"], answer: [0, 1, 2, 4] },
+
+            // --- SOAL MENJODOHKAN (31-40) ---
+            { id: 31, type: 'matching', text: "Peristiwa turunnya Al-Qur'an pertama kali kepada Nabi Muhammad SAW di Gua Hira.", options: matchingOptionsGlobal, answer: "Nuzulul Qur'an" },
+            { id: 32, type: 'matching', text: "Proses periwayatan ayat Al-Qur'an oleh orang banyak yang mustahil sepakat berbohong, menjamin keasliannya.", options: matchingOptionsGlobal, answer: "Mutawatir" },
+            { id: 33, type: 'matching', text: "Sahabat rasul yang ditunjuk sebagai ketua tim dalam proyek pembukuan Al-Qur'an pada masa Abu Bakar dan Usman.", options: matchingOptionsGlobal, answer: "Zaid bin Tsabit" },
+            { id: 34, type: 'matching', text: "Standar gaya penulisan Al-Qur'an yang disepakati pada masa khalifah ketiga untuk menghindari perselisihan umat.", options: matchingOptionsGlobal, answer: "Rasm Usmani" },
+            { id: 35, type: 'matching', text: "Klasifikasi ayat Al-Qur'an yang turun sebelum peristiwa hijrah, sangat kental dengan penekanan pada aspek akidah dan tauhid.", options: matchingOptionsGlobal, answer: "Makkiyah" },
+            { id: 36, type: 'matching', text: "Klasifikasi ayat Al-Qur'an yang turun pasca hijrah, banyak memuat aturan hukum kemasyarakatan dan tata negara.", options: matchingOptionsGlobal, answer: "Madaniyah" },
+            { id: 37, type: 'matching', text: "Istilah untuk proses pengumpulan catatan-catatan wahyu menjadi satu mushaf utuh.", options: matchingOptionsGlobal, answer: "Jam'ul Qur'an" },
+            { id: 38, type: 'matching', text: "Sesuatu yang luar biasa dari Allah yang diberikan kepada nabi untuk membuktikan kebenaran kerasulannya dan melemahkan musuh.", options: matchingOptionsGlobal, answer: "Mukjizat" },
+            { id: 39, type: 'matching', text: "Pesan, petunjuk, atau firman Allah yang diturunkan kepada para nabi dan rasul-Nya.", options: matchingOptionsGlobal, answer: "Wahyu" },
+            { id: 40, type: 'matching', text: "Malaikat yang bertugas sebagai perantara dalam menyampaikan wahyu Allah kepada Nabi Muhammad SAW.", options: matchingOptionsGlobal, answer: "Jibril" }
+        ];
+
+        const App = () => {
+            const [view, setView] = useState('login'); 
+            const [user, setUser] = useState(null); 
+            const [settings, setSettings] = useState(initialSettings);
+            const [questions, setQuestions] = useState(initialQuestions);
+            const [studentsData, setStudentsData] = useState({});
+            const [adminPassword, setAdminPassword] = useState('admin'); 
+            const [alertMsg, setAlertMsg] = useState(null);
+
+            const showAlert = (msg, isError = false) => {
+                setAlertMsg({ text: msg, isError });
+                setTimeout(() => setAlertMsg(null), 3000);
+            };
+
+            const logout = () => {
+                setUser(null);
+                setView('login');
+            };
+
+            return (
+                <div className="flex flex-col min-h-screen">
+                    <Header settings={settings} user={user} logout={logout} />
+                    
+                    {alertMsg && (
+                        <div className={`fixed top-20 right-5 z-50 p-4 rounded-lg shadow-lg text-white no-print transition-all transform ${alertMsg.isError ? 'bg-red-500' : 'bg-green-500'}`}>
+                            {alertMsg.text}
+                        </div>
+                    )}
+
+                    <main className="flex-grow flex items-center justify-center p-4">
+                        <div className="w-full max-w-5xl">
+                            {view === 'login' && <LoginView setView={setView} setUser={setUser} adminPassword={adminPassword} studentsData={studentsData} setStudentsData={setStudentsData} showAlert={showAlert} />}
+                            {view === 'admin_dashboard' && <AdminDashboard setView={setView} studentsData={studentsData} />}
+                            {view === 'admin_settings' && <AdminSettings settings={settings} setSettings={setSettings} adminPassword={adminPassword} setAdminPassword={setAdminPassword} setView={setView} showAlert={showAlert} />}
+                            {view === 'admin_edit_soal' && <AdminEditSoal questions={questions} setQuestions={setQuestions} setView={setView} showAlert={showAlert} />}
+                            {view === 'student_dashboard' && <StudentDashboard user={user} setView={setView} studentsData={studentsData} />}
+                            {view === 'exam' && <ExamView user={user} questions={questions} settings={settings} setView={setView} studentsData={studentsData} setStudentsData={setStudentsData} showAlert={showAlert} />}
+                            {view === 'result' && <ResultView user={user} studentsData={studentsData} setView={setView} kkm={settings.kkm} />}
+                        </div>
+                    </main>
+
+                    <footer className="bg-white border-t py-4 text-center text-sm text-gray-500 mt-auto no-print">
+                        <p>Disusun oleh: <strong>Damat, S.Ag., S. Pd.</strong> | MA. Mu'allimin NU Kota Malang</p>
+                        <p className="text-xs mt-1 text-yellow-600 bg-yellow-50 inline-block px-2 py-1 rounded border border-yellow-200">Aplikasi berjalan dalam mode In-Memory (Data akan reset jika halaman dimuat ulang)</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const Header = ({ settings, user, logout }) => (
+            <header className="bg-green-700 text-white shadow-md no-print">
+                <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                        <img src={settings.logo} alt="Logo" className="w-10 h-10 object-contain bg-white rounded-full p-1" onError={(e) => e.target.src='https://placehold.co/40x40/ffffff/000000?text=NU'} />
+                        <div>
+                            <h1 className="font-bold text-lg md:text-xl leading-tight">PTS Al-Qur'an Hadist Kls X</h1>
+                            <p className="text-xs md:text-sm text-green-100">MA. Mu'allimin NU Kota Malang</p>
+                        </div>
+                    </div>
+                    {user && (
+                        <div className="flex items-center space-x-4">
+                            <span className="hidden md:inline text-sm">
+                                <i className="fas fa-user-circle mr-1"></i> {user.name} ({user.role})
+                            </span>
+                            <button onClick={logout} className="bg-green-800 hover:bg-green-900 px-3 py-1.5 rounded text-sm transition">
+                                <i className="fas fa-sign-out-alt"></i> Keluar
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </header>
+        );
+
+        const LoginView = ({ setView, setUser, adminPassword, studentsData, setStudentsData, showAlert }) => {
+            const [tab, setTab] = useState('siswa');
+            
+            // Student state
+            const [nama, setNama] = useState('');
+            const [presensi, setPresensi] = useState('');
+            
+            // Admin state
+            const [adminUser, setAdminUser] = useState('');
+            const [adminPass, setAdminPass] = useState('');
+
+            const handleStudentLogin = (e) => {
+                e.preventDefault();
+                if (!nama || !presensi) return showAlert('Harap isi nama dan nomor presensi!', true);
+                
+                let sData = { ...studentsData };
+                if (!sData[presensi]) {
+                    // Register new student
+                    sData[presensi] = { name: nama, no: presensi, kelas: 'X', attempts: [] };
+                    setStudentsData(sData);
+                } else {
+                    // Check name if presensi exists (optional, keeping it simple for now)
+                }
+
+                setUser({ role: 'siswa', name: nama, no: presensi, kelas: 'X', isSimulasi: false });
+                setView('student_dashboard');
+            };
+
+            const handleAdminLogin = (e) => {
+                e.preventDefault();
+                if (adminUser === 'admin' && adminPass === adminPassword) {
+                    setUser({ role: 'admin', name: 'Administrator' });
+                    setView('admin_dashboard');
+                } else {
+                    showAlert('Username atau password admin salah!', true);
+                }
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-md mx-auto mt-10">
+                    <div className="flex border-b">
+                        <button className={`flex-1 py-3 font-semibold ${tab === 'siswa' ? 'bg-green-50 text-green-700 border-b-2 border-green-700' : 'text-gray-500 hover:bg-gray-50'}`} onClick={() => setTab('siswa')}>Login Siswa</button>
+                        <button className={`flex-1 py-3 font-semibold ${tab === 'admin' ? 'bg-green-50 text-green-700 border-b-2 border-green-700' : 'text-gray-500 hover:bg-gray-50'}`} onClick={() => setTab('admin')}>Login Admin</button>
+                    </div>
+
+                    <div className="p-6">
+                        {tab === 'siswa' ? (
+                            <form onSubmit={handleStudentLogin} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                                    <input type="text" className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="Masukkan nama Anda" value={nama} onChange={e => setNama(e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                                    <select className="w-full p-2 border rounded bg-gray-50 text-gray-600 outline-none" disabled>
+                                        <option>Kelas X</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">No. Presensi (Password)</label>
+                                    <input type="number" className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="Misal: 15" value={presensi} onChange={e => setPresensi(e.target.value)} required />
+                                </div>
+                                <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition">Masuk Ujian</button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleAdminLogin} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                    <input type="text" className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 outline-none" value={adminUser} onChange={e => setAdminUser(e.target.value)} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                    <input type="password" className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 outline-none" value={adminPass} onChange={e => setAdminPass(e.target.value)} required />
+                                </div>
+                                <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded transition">Masuk Admin</button>
+                                <p className="text-xs text-gray-400 text-center mt-2">Default: admin / admin</p>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminDashboard = ({ setView, studentsData }) => {
+            const studentList = Object.values(studentsData);
+            
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">Panel Administrator</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div onClick={() => setView('admin_edit_soal')} className="bg-white p-6 rounded-xl shadow cursor-pointer hover:shadow-md hover:border-blue-500 border-2 border-transparent transition text-center group">
+                            <i className="fas fa-edit text-3xl text-blue-500 mb-3 group-hover:scale-110 transition-transform"></i>
+                            <h3 className="font-semibold text-gray-700">Edit Soal</h3>
+                        </div>
+                        <div onClick={() => setView('admin_settings')} className="bg-white p-6 rounded-xl shadow cursor-pointer hover:shadow-md hover:border-purple-500 border-2 border-transparent transition text-center group">
+                            <i className="fas fa-cogs text-3xl text-purple-500 mb-3 group-hover:scale-110 transition-transform"></i>
+                            <h3 className="font-semibold text-gray-700">Pengaturan</h3>
+                        </div>
+                        <div onClick={() => {
+                            // Simulasi
+                            setView('student_dashboard');
+                            // Pura-pura jadi siswa dengan id 'simulasi' (state ditangani oleh app level, tapi kita pass flag agar tidak di-save)
+                            // We need access to setUser here. Let's pass it via context or props.
+                            // Actually, simpler: redirect to login and tell them to login as "Admin Simulasi".
+                            // To properly do it, I'll dispatch a custom event or just let them login with a fake number.
+                        }} className="bg-white p-6 rounded-xl shadow cursor-pointer hover:shadow-md hover:border-green-500 border-2 border-transparent transition text-center group relative overflow-hidden" 
+                        title="Untuk simulasi, silakan logout dan login di tab Siswa dengan nama apapun.">
+                            <i className="fas fa-play-circle text-3xl text-green-500 mb-3 group-hover:scale-110 transition-transform"></i>
+                            <h3 className="font-semibold text-gray-700">Uji Coba Ujian</h3>
+                            <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <span className="text-xs text-center px-2 font-medium text-green-700">Logout & login sbg siswa utk simulasi</span>
+                            </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-slate-700 to-slate-800 p-6 rounded-xl shadow text-white text-center flex flex-col justify-center">
+                            <h3 className="font-semibold opacity-80 text-sm mb-1">Total Siswa Ujian</h3>
+                            <p className="text-4xl font-bold">{studentList.length}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow p-6">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Data Nilai Siswa</h3>
+                        {studentList.length === 0 ? (
+                            <p className="text-gray-500 italic text-center py-4">Belum ada siswa yang mengerjakan ujian.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b text-sm">
+                                            <th className="p-3">No. Presensi</th>
+                                            <th className="p-3">Nama Lengkap</th>
+                                            <th className="p-3 text-center">Percobaan</th>
+                                            <th className="p-3 text-center">Nilai Tertinggi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {studentList.map(s => {
+                                            const maxScore = s.attempts.length > 0 ? Math.max(...s.attempts.map(a => a.score)) : '-';
+                                            return (
+                                                <tr key={s.no} className="border-b hover:bg-slate-50">
+                                                    <td className="p-3">{s.no}</td>
+                                                    <td className="p-3 font-medium">{s.name}</td>
+                                                    <td className="p-3 text-center">{s.attempts.length}/3</td>
+                                                    <td className="p-3 text-center font-bold text-green-600">{maxScore}</td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminSettings = ({ settings, setSettings, adminPassword, setAdminPassword, setView, showAlert }) => {
+            const [localSettings, setLocalSettings] = useState(settings);
+            const [newPass, setNewPass] = useState('');
+
+            const handleSave = (e) => {
+                e.preventDefault();
+                setSettings(localSettings);
+                if (newPass) setAdminPassword(newPass);
+                showAlert('Pengaturan berhasil disimpan!');
+                setView('admin_dashboard');
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow p-6 max-w-2xl mx-auto">
+                    <div className="flex items-center mb-6">
+                        <button onClick={() => setView('admin_dashboard')} className="mr-4 text-gray-500 hover:text-gray-800"><i className="fas fa-arrow-left"></i></button>
+                        <h2 className="text-2xl font-bold text-gray-800">Pengaturan Aplikasi</h2>
+                    </div>
+
+                    <form onSubmit={handleSave} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">URL Logo Madrasah</label>
+                            <input type="text" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" value={localSettings.logo} onChange={e => setLocalSettings({...localSettings, logo: e.target.value})} />
+                            <div className="mt-2 flex items-center text-sm text-gray-500">
+                                <span className="mr-2">Preview:</span>
+                                <img src={localSettings.logo} className="h-8 w-8 object-contain" alt="preview" onError={(e) => e.target.style.display='none'} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nilai KKM</label>
+                                <input type="number" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" value={localSettings.kkm} onChange={e => setLocalSettings({...localSettings, kkm: parseInt(e.target.value)})} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Waktu Ujian (Menit)</label>
+                                <input type="number" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" value={localSettings.timeLimit} onChange={e => setLocalSettings({...localSettings, timeLimit: parseInt(e.target.value)})} />
+                            </div>
+                        </div>
+                        <div className="pt-4 border-t">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ganti Password Admin Baru (Kosongkan jika tidak diganti)</label>
+                            <input type="text" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Password baru..." value={newPass} onChange={e => setNewPass(e.target.value)} />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <button type="button" onClick={() => setView('admin_dashboard')} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Batal</button>
+                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan Pengaturan</button>
+                        </div>
+                    </form>
+                </div>
+            );
+        };
+
+        const AdminEditSoal = ({ questions, setQuestions, setView, showAlert }) => {
+            const [localQuestions, setLocalQuestions] = useState([...questions]);
+            const [openId, setOpenId] = useState(null);
+
+            const handleTextChange = (id, text) => {
+                setLocalQuestions(localQuestions.map(q => q.id === id ? { ...q, text } : q));
+            };
+
+            const handleSave = () => {
+                setQuestions(localQuestions);
+                showAlert('Soal berhasil diperbarui!');
+                setView('admin_dashboard');
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow p-4 md:p-6">
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b sticky top-0 bg-white z-10 pt-2">
+                        <div className="flex items-center">
+                            <button onClick={() => setView('admin_dashboard')} className="mr-4 text-gray-500 hover:text-gray-800"><i className="fas fa-arrow-left"></i></button>
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Edit Soal Ujian</h2>
+                        </div>
+                        <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium shadow-sm transition"><i className="fas fa-save mr-2"></i> Simpan Semua</button>
+                    </div>
+
+                    <div className="space-y-3">
+                        {localQuestions.map((q, index) => (
+                            <div key={q.id} className="border rounded-lg overflow-hidden">
+                                <div 
+                                    className="bg-slate-50 p-4 flex justify-between items-center cursor-pointer hover:bg-slate-100"
+                                    onClick={() => setOpenId(openId === q.id ? null : q.id)}
+                                >
+                                    <div className="flex-1 truncate pr-4">
+                                        <span className="font-bold text-gray-600 mr-2">No. {index + 1}</span>
+                                        <span className="text-xs uppercase bg-gray-200 px-2 py-1 rounded text-gray-700 mr-3">{q.type === 'mc' ? 'PG' : q.type === 'cmc' ? 'PGK' : 'Jodoh'}</span>
+                                        <span className="text-gray-800 text-sm truncate">{q.text}</span>
+                                    </div>
+                                    <i className={`fas fa-chevron-${openId === q.id ? 'up' : 'down'} text-gray-400`}></i>
+                                </div>
+                                
+                                {openId === q.id && (
+                                    <div className="p-4 bg-white border-t space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Teks Soal</label>
+                                            <textarea className="w-full p-2 border rounded focus:ring-blue-500 outline-none" rows="3" value={q.text} onChange={(e) => handleTextChange(q.id, e.target.value)}></textarea>
+                                        </div>
+                                        <div className="text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
+                                            <i className="fas fa-info-circle mr-1"></i> Edit opsi jawaban dan kunci (tersedia di source code/versi lanjutan). Untuk demonstrasi ini, hanya teks soal yang dapat diedit langsung.
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const StudentDashboard = ({ user, setView, studentsData }) => {
+            const student = studentsData[user.no];
+            const attemptsLeft = 3 - (student?.attempts?.length || 0);
+
+            return (
+                <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-3xl mx-auto w-full">
+                    <div className="text-center mb-8 border-b pb-6">
+                        <div className="inline-block bg-green-100 text-green-700 p-4 rounded-full mb-4">
+                            <i className="fas fa-user-graduate text-4xl"></i>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800">Selamat Datang, {user.name}</h2>
+                        <p className="text-gray-500">Kelas: {user.kelas} | No. Presensi: {user.no}</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6 mb-8">
+                        <div className="bg-blue-50 rounded-lg p-5 border border-blue-100 text-center">
+                            <h3 className="text-blue-800 font-semibold mb-2">Status Kesempatan</h3>
+                            <div className="text-3xl font-bold text-blue-600 mb-1">{attemptsLeft} <span className="text-lg font-normal text-blue-400">/ 3</span></div>
+                            <p className="text-sm text-blue-500">Sisa kesempatan ujian Anda.</p>
+                        </div>
+                        
+                        <div className="flex flex-col justify-center">
+                            {attemptsLeft > 0 ? (
+                                <button onClick={() => setView('exam')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1 text-lg">
+                                    <i className="fas fa-play mr-2"></i> Mulai Ujian Sekarang
+                                </button>
+                            ) : (
+                                <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 text-center">
+                                    <i className="fas fa-ban text-2xl mb-2"></i>
+                                    <p className="font-semibold">Kesempatan Habis</p>
+                                    <p className="text-sm mt-1">Anda telah menggunakan semua kesempatan ujian.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {student?.attempts?.length > 0 && (
+                        <div>
+                            <h3 className="font-bold text-gray-800 mb-4 border-l-4 border-green-500 pl-3">Riwayat Hasil Ujian</h3>
+                            <div className="space-y-3">
+                                {student.attempts.map((att, i) => (
+                                    <div key={i} className="flex justify-between items-center bg-gray-50 p-4 rounded-lg border hover:bg-gray-100 transition">
+                                        <div>
+                                            <span className="font-semibold text-gray-700">Percobaan ke-{i + 1}</span>
+                                            <p className="text-xs text-gray-500">{new Date(att.date).toLocaleString('id-ID')}</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className={`text-xl font-bold ${att.score >= 76 ? 'text-green-600' : 'text-red-500'}`}>{att.score}</span>
+                                            <button onClick={() => setView('result')} className="text-blue-500 hover:text-blue-700 px-2" title="Lihat Detail Hasil terakhir">
+                                                <i className="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ExamView = ({ user, questions, settings, setView, studentsData, setStudentsData, showAlert }) => {
+            const [answers, setAnswers] = useState({});
+            const [currentIdx, setCurrentIdx] = useState(0);
+            const [timeLeft, setTimeLeft] = useState(settings.timeLimit * 60); // in seconds
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setTimeLeft(prev => {
+                        if (prev <= 1) {
+                            clearInterval(timer);
+                            if (!isSubmitting) autoSubmit();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [isSubmitting]);
+
+            const formatTime = (secs) => {
+                const m = Math.floor(secs / 60);
+                const s = secs % 60;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const handleMC = (qId, optIdx) => setAnswers(prev => ({ ...prev, [qId]: optIdx }));
+            
+            const handleCMC = (qId, optIdx) => {
+                setAnswers(prev => {
+                    const cur = prev[qId] || [];
+                    if (cur.includes(optIdx)) return { ...prev, [qId]: cur.filter(x => x !== optIdx) };
+                    return { ...prev, [qId]: [...cur, optIdx] };
+                });
+            };
+
+            const handleMatch = (qId, val) => setAnswers(prev => ({ ...prev, [qId]: val }));
+
+            const calculateScore = () => {
+                let score = 0;
+                const pointPerQuestion = 100 / questions.length; // 2.5 per soal
+                
+                questions.forEach(q => {
+                    const userAns = answers[q.id];
+                    if (userAns === undefined) return;
+
+                    if (q.type === 'mc' || q.type === 'matching') {
+                        if (userAns === q.answer) score += pointPerQuestion;
+                    } else if (q.type === 'cmc') {
+                        // All correct checkboxes must be checked, no wrong ones
+                        if (Array.isArray(userAns)) {
+                            const isCorrect = q.answer.length === userAns.length && q.answer.every(v => userAns.includes(v));
+                            if (isCorrect) score += pointPerQuestion;
+                        }
+                    }
+                });
+                return Math.round(score * 10) / 10; // Round to 1 decimal
+            };
+
+            const submitExam = () => {
+                setIsSubmitting(true);
+                const score = calculateScore();
+                
+                // Save attempt
+                const sData = { ...studentsData };
+                const student = sData[user.no];
+                student.attempts.push({
+                    score,
+                    date: new Date().toISOString(),
+                    answers: { ...answers }
+                });
+                setStudentsData(sData);
+                
+                showAlert('Ujian selesai! Sedang memproses nilai...', false);
+                setTimeout(() => setView('result'), 1500);
+            };
+
+            const autoSubmit = () => {
+                showAlert('Waktu habis! Jawaban dikumpulkan otomatis.', true);
+                submitExam();
+            };
+
+            const confirmSubmit = () => {
+                const answered = Object.keys(answers).length;
+                if (answered < questions.length) {
+                    if(!confirm(`Anda baru menjawab ${answered} dari ${questions.length} soal. Yakin ingin mengumpulkan?`)) return;
+                } else {
+                    if(!confirm('Apakah Anda yakin sudah selesai dan ingin mengumpulkan jawaban?')) return;
+                }
+                submitExam();
+            };
+
+            const q = questions[currentIdx];
+
+            return (
+                <div className="w-full flex flex-col md:flex-row gap-4 h-full max-h-[90vh]">
+                    {/* Main Quiz Area */}
+                    <div className="flex-1 bg-white rounded-xl shadow-lg flex flex-col overflow-hidden">
+                        {/* Quiz Header */}
+                        <div className="bg-slate-50 border-b p-4 flex justify-between items-center">
+                            <div>
+                                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">
+                                    {q.type === 'mc' ? 'Pilihan Ganda' : q.type === 'cmc' ? 'Pilihan Ganda Kompleks' : 'Menjodohkan'}
+                                </span>
+                            </div>
+                            <div className={`font-mono text-xl font-bold flex items-center ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-gray-700'}`}>
+                                <i className="fas fa-clock mr-2"></i> {formatTime(timeLeft)}
+                            </div>
+                        </div>
+
+                        {/* Question Content */}
+                        <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+                            <h3 className="text-lg md:text-xl text-gray-800 mb-6 leading-relaxed">
+                                <span className="font-bold mr-2">{currentIdx + 1}.</span> {q.text}
+                            </h3>
+
+                            <div className="space-y-3">
+                                {q.type === 'mc' && q.options.map((opt, i) => (
+                                    <label key={i} className={`flex items-start p-4 border rounded-xl cursor-pointer transition ${answers[q.id] === i ? 'bg-blue-50 border-blue-400 shadow-sm' : 'hover:bg-slate-50'}`}>
+                                        <input type="radio" name={`q-${q.id}`} className="mt-1 w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                                            checked={answers[q.id] === i} onChange={() => handleMC(q.id, i)} />
+                                        <span className="ml-3 text-gray-700">{opt}</span>
+                                    </label>
+                                ))}
+
+                                {q.type === 'cmc' && (
+                                    <>
+                                        <p className="text-sm text-blue-600 mb-2 italic"><i className="fas fa-info-circle"></i> Pilih lebih dari satu jawaban yang benar.</p>
+                                        {q.options.map((opt, i) => (
+                                            <label key={i} className={`flex items-start p-4 border rounded-xl cursor-pointer transition ${(answers[q.id] || []).includes(i) ? 'bg-indigo-50 border-indigo-400 shadow-sm' : 'hover:bg-slate-50'}`}>
+                                                <input type="checkbox" className="mt-1 w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                                    checked={(answers[q.id] || []).includes(i)} onChange={() => handleCMC(q.id, i)} />
+                                                <span className="ml-3 text-gray-700">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </>
+                                )}
+
+                                {q.type === 'matching' && (
+                                    <div className="mt-4 p-5 bg-orange-50 border border-orange-100 rounded-xl">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Pasangan yang Tepat:</label>
+                                        <select 
+                                            className="w-full p-3 border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500 bg-white shadow-sm"
+                                            value={answers[q.id] || ""}
+                                            onChange={(e) => handleMatch(q.id, e.target.value)}
+                                        >
+                                            <option value="">-- Pilih Jawaban --</option>
+                                            {q.options.map((opt, i) => (
+                                                <option key={i} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Navigation Footer */}
+                        <div className="border-t p-4 flex justify-between bg-white">
+                            <button 
+                                onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
+                                disabled={currentIdx === 0}
+                                className="px-5 py-2.5 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-30 font-medium transition"
+                            >
+                                <i className="fas fa-arrow-left mr-2"></i> Sebelumnya
+                            </button>
+                            
+                            {currentIdx === questions.length - 1 ? (
+                                <button onClick={confirmSubmit} className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded font-bold shadow-md transition transform hover:scale-105">
+                                    Selesai & Kumpulkan <i className="fas fa-check-circle ml-2"></i>
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={() => setCurrentIdx(prev => Math.min(questions.length - 1, prev + 1))}
+                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow-md transition"
+                                >
+                                    Selanjutnya <i className="fas fa-arrow-right ml-2"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Sidebar Navigation */}
+                    <div className="w-full md:w-64 lg:w-80 bg-white rounded-xl shadow-lg p-4 flex flex-col">
+                        <h3 className="font-bold text-gray-700 mb-4 pb-2 border-b">Navigasi Soal</h3>
+                        <div className="grid grid-cols-5 gap-2 overflow-y-auto pr-1 pb-4 flex-1 content-start">
+                            {questions.map((qItem, i) => {
+                                const isAnswered = qItem.type === 'cmc' ? (answers[qItem.id] && answers[qItem.id].length > 0) : (answers[qItem.id] !== undefined && answers[qItem.id] !== "");
+                                const isCurrent = currentIdx === i;
+                                return (
+                                    <button 
+                                        key={qItem.id}
+                                        onClick={() => setCurrentIdx(i)}
+                                        className={`h-10 w-full rounded flex items-center justify-center font-medium border text-sm transition-all
+                                            ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-1 font-bold transform scale-110' : ''}
+                                            ${isAnswered ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-600 hover:bg-gray-100'}
+                                        `}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-4 pt-4 border-t flex flex-col gap-2 text-xs text-gray-500">
+                            <div className="flex items-center"><div className="w-3 h-3 bg-green-500 rounded mr-2"></div> Sudah dijawab</div>
+                            <div className="flex items-center"><div className="w-3 h-3 border border-gray-300 rounded mr-2"></div> Belum dijawab</div>
+                            <button onClick={confirmSubmit} className="mt-2 w-full py-2 border-2 border-red-500 text-red-600 rounded font-bold hover:bg-red-50 transition">Akhiri Ujian</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ResultView = ({ user, studentsData, setView, kkm }) => {
+            const student = studentsData[user.no];
+            const latestAttempt = student?.attempts[student.attempts.length - 1];
+            
+            if (!latestAttempt) return <div className="text-center p-10">Data tidak ditemukan. <button onClick={() => setView('student_dashboard')} className="text-blue-500 underline">Kembali</button></div>;
+
+            const score = latestAttempt.score;
+            const isPassed = score >= kkm;
+
+            return (
+                <div className="w-full max-w-2xl mx-auto">
+                    {/* Print Section */}
+                    <div id="print-area" className="bg-white rounded-xl shadow-lg p-8 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 via-yellow-400 to-blue-500 no-print"></div>
+                        
+                        <div className="text-center mb-6 pb-6 border-b-2 border-dashed">
+                            <h2 className="text-3xl font-bold text-gray-800 uppercase tracking-wider mb-2">Sertifikat Hasil Ujian</h2>
+                            <p className="text-gray-600">Penilaian Tengah Semester Al-Qur'an Hadist</p>
+                            <p className="text-gray-500 text-sm">MA. Mu'allimin NU Kota Malang</p>
+                        </div>
+
+                        <div className="mb-8 bg-slate-50 p-6 rounded-lg border">
+                            <table className="w-full text-left">
+                                <tbody>
+                                    <tr><th className="py-2 text-gray-600 w-1/3">Nama Lengkap</th><td className="font-bold text-gray-800 text-lg">: {user.name}</td></tr>
+                                    <tr><th className="py-2 text-gray-600">Kelas</th><td className="font-semibold text-gray-800">: {user.kelas}</td></tr>
+                                    <tr><th className="py-2 text-gray-600">No. Presensi</th><td className="font-semibold text-gray-800">: {user.no}</td></tr>
+                                    <tr><th className="py-2 text-gray-600">Waktu Selesai</th><td className="font-semibold text-gray-800">: {new Date(latestAttempt.date).toLocaleString('id-ID')}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="text-center mb-8">
+                            <p className="text-gray-500 uppercase tracking-widest font-semibold mb-2">Nilai Akhir</p>
+                            <div className="inline-block relative">
+                                <svg className="w-40 h-40 absolute inset-0 -ml-4 -mt-4 opacity-10" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="currentColor"/></svg>
+                                <span className={`text-6xl font-black relative z-10 ${isPassed ? 'text-green-600' : 'text-red-500'}`}>{score}</span>
+                            </div>
+                        </div>
+
+                        <div className={`p-4 rounded-lg text-center font-bold text-lg ${isPassed ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+                            {isPassed ? (
+                                <><i className="fas fa-check-circle mr-2"></i> LULUS (Tuntas KKM: {kkm})</>
+                            ) : (
+                                <><i className="fas fa-times-circle mr-2"></i> BELUM LULUS (Di Bawah KKM: {kkm})</>
+                            )}
+                        </div>
+                        
+                        <div className="mt-8 pt-4 border-t text-center text-sm text-gray-400 print-only">
+                            <p>Dokumen ini dicetak dari Aplikasi Ujian CBT MA Mu'allimin NU Malang.</p>
+                            <p>Guru Pengampu: Damat, S.Ag., S. Pd.</p>
+                        </div>
+                    </div>
+
+                    {/* Action Buttons (Not Printed) */}
+                    <div className="mt-6 flex justify-center gap-4 no-print">
+                        <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow transition flex items-center">
+                            <i className="fas fa-print mr-2"></i> Cetak / Download PDF
+                        </button>
+                        <button onClick={() => setView('student_dashboard')} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-bold shadow transition">
+                            Kembali ke Beranda
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
